@@ -36,6 +36,5 @@ char *read_line(FILE *file_pointer)
         }
     }
 
-    printf("Line read: |%s|", finished_line);
     return finished_line;
 }
