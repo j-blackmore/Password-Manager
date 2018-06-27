@@ -1,5 +1,7 @@
 #include "crypto.h"
 
+static int *string_to_binary(char *string_to_convert);
+
 // First 32 bits of fractional parts of square roots of first 8 primes
 const unsigned int initial_hash[] 
 = {0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19};
@@ -18,4 +20,22 @@ const unsigned int round_constants[]
 /** sha-256 hash function, takes a value to hash */
 char *hash_sha256(char *value) {
     unsigned int message_len_bits = strlen(value) * sizeof(char);
+    int *message_binary = string_to_binary(value);
+}
+
+static int *string_to_binary(char *string_to_convert) {
+    int string_len = strlen(string_to_convert);
+
+    int i, j; 
+    int *binary = malloc(sizeof(int) * string_len * 8);
+    for(i = 0; i < string_len; i++) {
+        int ascii_val = string_to_convert[i];
+
+        for(j = 0; j < 8; j++) {
+            binary[i*8 + j] = ascii_val >> (7-j);
+            if(binary[i*8 + j]) ascii_val = ascii_val ^ (1 << (7-j));
+        }
+    }
+
+    return binary;
 }
