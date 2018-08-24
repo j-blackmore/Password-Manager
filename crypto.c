@@ -1,6 +1,6 @@
 #include "crypto.h"
 
-static int *string_to_binary(char *string_to_convert);
+static int *append_padding(int *message_binary, int message_len_bits, int bits_to_add);
 
 // First 32 bits of fractional parts of square roots of first 8 primes
 const unsigned int initial_hash[] 
@@ -19,23 +19,33 @@ const unsigned int round_constants[]
 
 /** sha-256 hash function, takes a value to hash */
 char *hash_sha256(char *value) {
-    unsigned int message_len_bits = strlen(value) * sizeof(char);
+    unsigned int message_len_bits = strlen(value) * sizeof(char) * 8;
     int *message_binary = string_to_binary(value);
+
+    // bits to add = 1 + 64 + number of bits to make total length multiple of 512
+    int bits_to_add = 512 - (1 + message_len_bits + 64) % 512;
+    int new_message_len_bits = message_len_bits + bits_to_add;
+    message_binary = append_padding(message_binary, message_len_bits, bits_to_add);
 }
 
-static int *string_to_binary(char *string_to_convert) {
-    int string_len = strlen(string_to_convert);
+static int *append_padding(int *message_binary, int message_len_bits, int bits_to_add) {
+    int new_message_len_bits = message_len_bits + bits_to_add;
+    int *new_message_binary = realloc(message_binary, sizeof(int) * new_message_len_bits);
 
-    int i, j; 
-    int *binary = malloc(sizeof(int) * string_len * 8);
-    for(i = 0; i < string_len; i++) {
-        int ascii_val = string_to_convert[i];
+    // append a single '1' bit
+    new_message_binary[message_len_bits] = 1;
 
-        for(j = 0; j < 8; j++) {
-            binary[i*8 + j] = ascii_val >> (7-j);
-            if(binary[i*8 + j]) ascii_val = ascii_val ^ (1 << (7-j));
-        }
+    // append '0' bits padding, leaving final 64 bits free 
+    int i;
+    for(i = 1; i < bits_to_add-64; i++) {
+        new_message_binary[message_len_bits + i] = 0;
+    } 
+
+    // append length of original message as 64-bit binary value
+    int *len_as_binary = integer_to_binary(message_len_bits, 64);
+    for(i = 0; i < 64; i++) {
+        new_message_binary[new_message_len_bits-64+i] = len_as_binary[i];
     }
 
-    return binary;
+    return new_message_binary;
 }
