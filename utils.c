@@ -39,3 +39,12 @@ void print_binary_array(int *binary_array, int array_len) {
     }
     printf("\n");
 }
+
+int binary_to_integer(int *binary_array, int num_of_bits) {
+    int i, integer = 0;
+    for(i = 0; i < num_of_bits; i++) {
+        if(binary_array[0]) integer += (int) pow(2, num_of_bits-1-i);
+    }
+
+    return integer;
+}

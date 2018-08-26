@@ -1,4 +1,4 @@
-CC=gcc
+CC=gcc -lm
 CFLAGS=-g -Wall -std=c99
 DEPS = file-hanlder.h login.h crypto.h utils.h
 
