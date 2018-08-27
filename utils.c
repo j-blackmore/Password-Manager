@@ -48,3 +48,11 @@ int binary_to_integer(int *binary_array, int num_of_bits) {
 
     return integer;
 }
+
+unsigned int right_rotate(unsigned int integer, int bits) {
+    return (integer >> bits)|(integer << (32 - bits));
+}
+
+unsigned int right_shift(unsigned int integer, int bits) {
+    return integer >> bits;
+}
