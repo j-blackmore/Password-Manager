@@ -1,6 +1,7 @@
 #include "crypto.h"
 
 static int *append_padding(int *message_binary, int message_len_bits, int bits_to_add);
+static void process_message(int *message_binary, int message_len_bits);
 
 // First 32 bits of fractional parts of square roots of first 8 primes
 const unsigned int initial_hash[] 
@@ -26,6 +27,9 @@ char *hash_sha256(char *value) {
     int bits_to_add = 512 - (1 + message_len_bits + 64) % 512;
     int new_message_len_bits = message_len_bits + bits_to_add;
     message_binary = append_padding(message_binary, message_len_bits, bits_to_add);
+
+    // process the message
+    process_message(message_binary, new_message_len_bits);
 }
 
 static int *append_padding(int *message_binary, int message_len_bits, int bits_to_add) {
@@ -48,4 +52,39 @@ static int *append_padding(int *message_binary, int message_len_bits, int bits_t
     }
 
     return new_message_binary;
+}
+
+static void process_message(int *message_binary, int message_len_bits) {
+    int num_of_chunks = message_len_bits / 512;
+    int i, j;
+    unsigned int sum1, sum2;
+    for(i = 0; i < num_of_chunks; i++) {
+        unsigned int *w = malloc(sizeof(unsigned int) * 64);    // words of message
+        for(j = 0; j < 64; j++) {
+            w[j] = 0;
+        }
+
+        // copy chunk as 32 bit words into first 16 words 
+        for(j = 0; j < 16; j++) {
+            w[j] = binary_to_integer(message_binary+(512*i)+(32*j), 32);
+        }
+
+        // extend first 16 words into the remaining 48
+        for(j = 16; j < 64; j++) {
+            sum1 = right_rotate(w[j-15], 7) ^ right_rotate(w[j-15], 18) ^ right_shift(w[j-15], 3);
+            sum2 = right_rotate(w[j-2], 17) ^ right_rotate(w[j-2], 19) ^ right_shift(w[j-2], 10);
+            w[j] = w[j-16] + sum1 + w[j-7] + sum2;
+        }
+
+        // initialise working variables to current hash values
+        unsigned int a = initial_hash[0];
+        unsigned int b = initial_hash[1];
+        unsigned int c = initial_hash[2];
+        unsigned int d = initial_hash[3];
+        unsigned int e = initial_hash[4];
+        unsigned int f = initial_hash[5];
+        unsigned int g = initial_hash[6];
+        unsigned int h = initial_hash[7];
+     
+    }
 }
