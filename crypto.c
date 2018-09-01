@@ -57,7 +57,7 @@ static int *append_padding(int *message_binary, int message_len_bits, int bits_t
 static void process_message(int *message_binary, int message_len_bits) {
     int num_of_chunks = message_len_bits / 512;
     int i, j;
-    unsigned int sum1, sum2;
+    unsigned int sum1, sum2, checksum, temp1, temp2;
     for(i = 0; i < num_of_chunks; i++) {
         unsigned int *w = malloc(sizeof(unsigned int) * 64);    // words of message
         for(j = 0; j < 64; j++) {
@@ -86,5 +86,25 @@ static void process_message(int *message_binary, int message_len_bits) {
         unsigned int g = initial_hash[6];
         unsigned int h = initial_hash[7];
      
+        // compression function main loop
+        for(j = 0; j < 64; j++) {
+            sum1 = right_rotate(e, 6) ^ right_rotate(e, 11) ^ right_rotate(e, 25);
+            checksum = (e & f) ^ ((~e) & g);
+            temp1 = h + sum1 + checksum + round_constants[i] + w[i];
+            sum2 = right_rotate(a, 2) ^ right_rotate(a, 13) ^ right_rotate(a, 22);
+            temp2 = sum2 + ((a & b) ^ (a & c) ^ (b & c));
+
+            h = g;
+            g = f;
+            f = e;
+            e = d + temp1;
+            d = c;
+            c = b;
+            b = a;
+            a = temp1 + temp2;
+        }
+
+        // add compression chunk to current hash value
+        
     }
 }
