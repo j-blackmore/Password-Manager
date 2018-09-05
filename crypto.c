@@ -1,10 +1,10 @@
 #include "crypto.h"
 
 static int *append_padding(int *message_binary, int message_len_bits, int bits_to_add);
-static void process_message(int *message_binary, int message_len_bits);
+static unsigned int *process_message(int *message_binary, int message_len_bits);
 
 // First 32 bits of fractional parts of square roots of first 8 primes
-const unsigned int initial_hash[] 
+const unsigned int hash_values[] 
 = {0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19};
 
 // First 32 bits of fractional parts of cube roots of first 64 primes
@@ -29,7 +29,7 @@ char *hash_sha256(char *value) {
     message_binary = append_padding(message_binary, message_len_bits, bits_to_add);
 
     // process the message
-    process_message(message_binary, new_message_len_bits);
+    unsigned int *hash = process_message(message_binary, new_message_len_bits);
 }
 
 static int *append_padding(int *message_binary, int message_len_bits, int bits_to_add) {
@@ -54,10 +54,12 @@ static int *append_padding(int *message_binary, int message_len_bits, int bits_t
     return new_message_binary;
 }
 
-static void process_message(int *message_binary, int message_len_bits) {
+static unsigned int *process_message(int *message_binary, int message_len_bits) {
     int num_of_chunks = message_len_bits / 512;
     int i, j;
     unsigned int sum1, sum2, checksum, temp1, temp2;
+    unsigned int *hash = malloc(sizeof(unsigned int) * 8);
+    
     for(i = 0; i < num_of_chunks; i++) {
         unsigned int *w = malloc(sizeof(unsigned int) * 64);    // words of message
         for(j = 0; j < 64; j++) {
@@ -76,15 +78,15 @@ static void process_message(int *message_binary, int message_len_bits) {
             w[j] = w[j-16] + sum1 + w[j-7] + sum2;
         }
 
-        // initialise working variables to current hash values
-        unsigned int a = initial_hash[0];
-        unsigned int b = initial_hash[1];
-        unsigned int c = initial_hash[2];
-        unsigned int d = initial_hash[3];
-        unsigned int e = initial_hash[4];
-        unsigned int f = initial_hash[5];
-        unsigned int g = initial_hash[6];
-        unsigned int h = initial_hash[7];
+        // initialise working variables and hash to current hash values
+        unsigned int a = hash[0] = hash_values[0];
+        unsigned int b = hash[1] = hash_values[1];
+        unsigned int c = hash[2] = hash_values[2];
+        unsigned int d = hash[3] = hash_values[3];
+        unsigned int e = hash[4] = hash_values[4];
+        unsigned int f = hash[5] = hash_values[5];
+        unsigned int g = hash[6] = hash_values[6];
+        unsigned int h = hash[7] = hash_values[7];
      
         // compression function main loop
         for(j = 0; j < 64; j++) {
@@ -104,7 +106,16 @@ static void process_message(int *message_binary, int message_len_bits) {
             a = temp1 + temp2;
         }
 
-        // add compression chunk to current hash value
-        
+        // add compression chunk to hash
+        hash[0] += a;
+        hash[1] += b;
+        hash[2] += c;
+        hash[3] += d;
+        hash[4] += e;
+        hash[5] += f;
+        hash[6] += g;
+        hash[7] += h;
     }
+
+    return hash;
 }
