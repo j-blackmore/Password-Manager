@@ -9,3 +9,4 @@ extern void print_binary_array(int *binary_array, int array_len);
 extern int binary_to_integer(int *binary_array, int num_of_bits);
 extern unsigned int right_rotate(unsigned int integer, int bits);
 extern unsigned int right_shift(unsigned int integer, int bits);
+extern char *unsigned_int_array_to_hex_string(unsigned int *array, int array_len);

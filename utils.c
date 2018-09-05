@@ -56,3 +56,15 @@ unsigned int right_rotate(unsigned int integer, int bits) {
 unsigned int right_shift(unsigned int integer, int bits) {
     return integer >> bits;
 }
+
+char *unsigned_int_array_to_hex_string(unsigned int *array, int array_len) {
+    int array_entry_size = sizeof(unsigned int) * 2;
+    char *string = malloc(sizeof(char) * array_len * array_entry_size);
+    int i;
+
+    for(i = 0; i < array_len; i++) {
+        sprintf(string+i*array_entry_size, "%0X", array[i]);
+    }
+
+    return string;
+}
