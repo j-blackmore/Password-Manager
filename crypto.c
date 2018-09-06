@@ -1,6 +1,6 @@
 #include "crypto.h"
 
-static int *append_padding(int *message_binary, int message_len_bits, int bits_to_add);
+static int *append_padding(int *message_binary, int message_len_bits, int bits_to_add, int new_message_len_bits);
 static unsigned int *process_message(int *message_binary, int message_len_bits);
 
 // First 32 bits of fractional parts of square roots of first 8 primes
@@ -25,15 +25,17 @@ char *hash_sha256(char *value) {
 
     // bits to add = 1 + 64 + number of bits to make total length multiple of 512
     int bits_to_add = 512 - (1 + message_len_bits + 64) % 512;
-    int new_message_len_bits = message_len_bits + bits_to_add;
-    message_binary = append_padding(message_binary, message_len_bits, bits_to_add);
+    int new_message_len_bits = message_len_bits + 1 + bits_to_add + 64;
+    message_binary = append_padding(message_binary, message_len_bits, bits_to_add, new_message_len_bits);
 
     // process the message and get hash result
     unsigned int *hash = process_message(message_binary, new_message_len_bits);
+
+    // return hash as string
+    return unsigned_int_array_to_hex_string(hash, 8);
 }
 
-static int *append_padding(int *message_binary, int message_len_bits, int bits_to_add) {
-    int new_message_len_bits = message_len_bits + bits_to_add;
+static int *append_padding(int *message_binary, int message_len_bits, int bits_to_add, int new_message_len_bits) {
     int *new_message_binary = realloc(message_binary, sizeof(int) * new_message_len_bits);
 
     // append a single '1' bit
@@ -58,7 +60,12 @@ static unsigned int *process_message(int *message_binary, int message_len_bits) 
     int num_of_chunks = message_len_bits / 512;
     int i, j;
     unsigned int sum1, sum2, checksum, temp1, temp2;
+
+    // initialise hash values
     unsigned int *hash = malloc(sizeof(unsigned int) * 8);
+    for(i = 0; i < 8; i++) {
+        hash[i] = hash_values[i];
+    }
     
     for(i = 0; i < num_of_chunks; i++) {
         unsigned int *w = malloc(sizeof(unsigned int) * 64);    // words of message
@@ -68,7 +75,7 @@ static unsigned int *process_message(int *message_binary, int message_len_bits) 
 
         // copy chunk as 32 bit words into first 16 words 
         for(j = 0; j < 16; j++) {
-            w[j] = binary_to_integer(message_binary+(512*i)+(32*j), 32);
+            w[j] = binary_to_unsigned_integer(message_binary+(512*i)+(32*j), 32);
         }
 
         // extend first 16 words into the remaining 48
@@ -78,21 +85,21 @@ static unsigned int *process_message(int *message_binary, int message_len_bits) 
             w[j] = w[j-16] + sum1 + w[j-7] + sum2;
         }
 
-        // initialise working variables and hash to current hash values
-        unsigned int a = hash[0] = hash_values[0];
-        unsigned int b = hash[1] = hash_values[1];
-        unsigned int c = hash[2] = hash_values[2];
-        unsigned int d = hash[3] = hash_values[3];
-        unsigned int e = hash[4] = hash_values[4];
-        unsigned int f = hash[5] = hash_values[5];
-        unsigned int g = hash[6] = hash_values[6];
-        unsigned int h = hash[7] = hash_values[7];
+        // initialise working variables to current hash values
+        unsigned int a = hash[0];
+        unsigned int b = hash[1];
+        unsigned int c = hash[2];
+        unsigned int d = hash[3];
+        unsigned int e = hash[4];
+        unsigned int f = hash[5];
+        unsigned int g = hash[6];
+        unsigned int h = hash[7];
      
         // compression function main loop
         for(j = 0; j < 64; j++) {
             sum1 = right_rotate(e, 6) ^ right_rotate(e, 11) ^ right_rotate(e, 25);
             checksum = (e & f) ^ ((~e) & g);
-            temp1 = h + sum1 + checksum + round_constants[i] + w[i];
+            temp1 = h + sum1 + checksum + round_constants[j] + w[j];
             sum2 = right_rotate(a, 2) ^ right_rotate(a, 13) ^ right_rotate(a, 22);
             temp2 = sum2 + ((a & b) ^ (a & c) ^ (b & c));
 
@@ -106,7 +113,7 @@ static unsigned int *process_message(int *message_binary, int message_len_bits) 
             a = temp1 + temp2;
         }
 
-        // add compression chunk to hash
+        // add compression chunk to current hash values
         hash[0] += a;
         hash[1] += b;
         hash[2] += c;

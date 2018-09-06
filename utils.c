@@ -40,21 +40,24 @@ void print_binary_array(int *binary_array, int array_len) {
     printf("\n");
 }
 
-int binary_to_integer(int *binary_array, int num_of_bits) {
-    int i, integer = 0;
+unsigned int binary_to_unsigned_integer(int *binary_array, int num_of_bits) {
+    int i;
+    unsigned int integer = 0;
     for(i = 0; i < num_of_bits; i++) {
-        if(binary_array[0]) integer += (int) pow(2, num_of_bits-1-i);
+        if(binary_array[i]) integer += (unsigned int) pow(2, num_of_bits-1-i);
     }
 
     return integer;
 }
 
 unsigned int right_rotate(unsigned int integer, int bits) {
-    return (integer >> bits)|(integer << (32 - bits));
+    unsigned int result = ((integer >> bits)|(integer << (32 - bits)));
+    return result;
 }
 
 unsigned int right_shift(unsigned int integer, int bits) {
-    return integer >> bits;
+    unsigned int result = (integer >> bits);
+    return result;
 }
 
 char *unsigned_int_array_to_hex_string(unsigned int *array, int array_len) {
@@ -63,7 +66,7 @@ char *unsigned_int_array_to_hex_string(unsigned int *array, int array_len) {
     int i;
 
     for(i = 0; i < array_len; i++) {
-        sprintf(string+i*array_entry_size, "%0X", array[i]);
+        sprintf(string+(i*array_entry_size), "%08X", array[i]);
     }
 
     return string;
