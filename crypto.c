@@ -19,7 +19,7 @@ const unsigned int round_constants[]
    0x748F82EE, 0x78A5636F, 0x84C87814, 0x8CC70208, 0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2};
 
 /** sha-256 hash function, takes a value to hash */
-char *hash_sha256(char *value) {
+char *sha256(char *value) {
     unsigned int message_len_bits = strlen(value) * sizeof(char) * 8;
     int *message_binary = string_to_binary(value);
 
