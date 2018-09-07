@@ -29,6 +29,7 @@ char *read_line(FILE *file_pointer)
 
         // cut empty space and newline character
         if(read_len != buffer_size-1 || line_buffer[buffer_size-1] == '\n') {
+            finished_line[line_len-1] = '\0';
             char *temp = strdup(finished_line);
             free(finished_line);
             finished_line = temp;
