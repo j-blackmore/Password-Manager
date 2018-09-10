@@ -13,6 +13,7 @@ char *read_line(FILE *file_pointer)
 {
     if(file_pointer == NULL) {
         printf("Cannot read from file\n");
+        return NULL;
     }
 
     int buffer_size = 16;
@@ -38,4 +39,14 @@ char *read_line(FILE *file_pointer)
     }
 
     return finished_line;
+}
+
+int write_line(const char *string, FILE *file_pointer) 
+{
+    if(file_pointer == NULL) {
+        printf("Cannot read from file\n");
+        return 1;
+    }
+
+    return fputs(string, file_pointer);
 }

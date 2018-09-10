@@ -7,3 +7,4 @@
 
 extern int check_file_exists(const char* file_name);
 extern char *read_line(FILE *file_pointer);
+extern int write_line(const char *string, FILE *file_pointer);
